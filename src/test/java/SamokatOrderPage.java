@@ -25,7 +25,7 @@ public class SamokatOrderPage {
     private final By rentDaysFieldDropdownOption = By.className("Dropdown-option");
     //Локатор для выбора цвета самоката
     private final By blackSamokat = By.xpath("//label[@for = 'black']");
-    private final By greySamokat = By.xpath("//label[@for = 'grey']");
+    //private final By greySamokat = By.xpath("//label[@for = 'grey']");
 
     private final By commentForCourier = By.xpath("//input[contains(@placeholder, 'Комментарий для курьера')]");
 
