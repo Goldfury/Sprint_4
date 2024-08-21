@@ -1,79 +1,23 @@
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.junit.After;
 import org.junit.Test;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 @RunWith(Parameterized.class)
 public class PraktikumTest {
 
     private WebDriver driver;
-
-    private final String name;
-    private final String surname;
-    private final String address;
-    private final String phoneNumber;
-    private final String date;
-    private final String comment;
+    private final String text;
+    private final String FAQItem;
+    private final String FAQAnswerText;
     private final String url = "https://qa-scooter.praktikum-services.ru/";
-
-    public PraktikumTest(String name, String surname, String address, String phoneNumber, String date, String comment) {
-        this.name = name;
-        this.surname = surname;
-        this.address = address;
-        this.phoneNumber = phoneNumber;
-        this.date = date;
-        this.comment = comment;
-    }
-
-    // Тестовые данные
-    @Parameterized.Parameters
-    public static Object[][] getCredentials() {
-        return new Object[][] {
-                { "Акылбек", "Акылбек", "Астана", "87055463022", "21.07.2001", "Классный самокат" },
-                { "Нурсултан", "Арманов", "Алматы", "87073332211", "21.04.1995", "что то новое"},
-        };
-    }
-
-    //тут проверяется код с параметризацией
-    @Test
-    public void praktikumTest() {
-        driver = new ChromeDriver();
-        driver.get(url);
-        driver.findElement(By.xpath("//button[@class= 'Button_Button__ra12g']")).click();
-        driver.findElement(By.xpath("//input[@placeholder='* Имя']")).sendKeys(name);
-        driver.findElement(By.xpath("//input[@placeholder='* Фамилия']")).sendKeys(surname);
-        driver.findElement(By.xpath("//input[contains(@placeholder, 'куда')]")).sendKeys(address);
-        //тут должен быть выбор станции
-        driver.findElement(By.xpath("//input[@placeholder = '* Станция метро']")).click();
-        driver.findElement(By.cssSelector(".Order_SelectOption__82bhS.select-search__option")).click();
-        driver.findElement(By.xpath("//input[contains(@placeholder, 'курьер')]")).sendKeys(phoneNumber);
-        new WebDriverWait(driver, Duration.ofSeconds(3))
-                .until(ExpectedConditions.elementToBeClickable(By.xpath("//button[@class = 'Button_Button__ra12g Button_Middle__1CSJM' and text()='Далее']")));
-        //вторая часть формы
-        driver.findElement(By.xpath("//button[@class = 'Button_Button__ra12g Button_Middle__1CSJM' and text()='Далее']")).click();
-        driver.findElement(By.xpath("//input[contains(@placeholder, '* Когда привезти самокат')]")).sendKeys(date);
-        //нужен для того чтобы найти в календаре день заказа и кликнуть так как  след поле оно блокирует
-        driver.findElement(By.xpath("//div[text()='21']")).click();
-        driver.findElement(By.className("Dropdown-placeholder")).click();
-        driver.findElement(By.className("Dropdown-option")).click();
-        driver.findElement(By.xpath("//label[@for = 'grey']")).click();
-        driver.findElement(By.xpath("//input[contains(@placeholder, 'Комментарий для курьера')]")).sendKeys(comment);
-        driver.findElement(By.xpath("//button[@class='Button_Button__ra12g Button_Middle__1CSJM' and text()='Заказать']")).click();
-        driver.findElement(By.xpath("//button[@class='Button_Button__ra12g Button_Middle__1CSJM' and text()='Да']")).click();
-    }
 
     //тут просто проверяется код на заказ
     @Test
-    public void createOrder() {
+    public void createOrderTest() {
         // создали драйвер для браузера Chrome
         driver = new ChromeDriver();
         // перешли на страницу тестового приложения
@@ -82,35 +26,56 @@ public class PraktikumTest {
         SamokatOrderPage objSamokatOrderPage = new SamokatOrderPage(driver);
         objSamokatOrderPage.fillSamokatOrderForm();
         //Проверка которая должна сломаться так как в Хроме не выходит что Заказ оформлен
+        // задаче написано:Обрати внимание: в приложении есть баг, который не даёт оформить заказ. Он воспроизводится только в Chrome.
+        //Ты можешь заметить этот баг, когда будешь писать тесты или запускать их. Ещё может случиться так: тест наткнётся на баг и упадёт. Пусть тебя это не смущает: если тест помог найти неисправность, это хорошо.
         String confirmText = objSamokatOrderPage.getConfirmOrderText();
-        String expected = "Заказ оформлен";
-        Assert.assertEquals("Окно подтверждения заказа не открылось", expected, confirmText);
+        Assert.assertTrue("Текст 'Заказ оформлен' не найден", confirmText.contains("Заказ оформлен"));
     }
 
     //В данном тесте проверяется только большая кнопка на странице со сравнением с текстом, так как в header уже идет проверка в формировании заказа
     @Test
-    public void checkBigOrderbutton(){
+    public void checkBigOrderbuttonTest(){
         driver = new ChromeDriver();
         driver.get(url);
         SamokatHomePageTest objSamokatHomePageTest = new SamokatHomePageTest(driver);
         objSamokatHomePageTest.checkBigOrderButton();
+        String titleOfTheForm = objSamokatHomePageTest.gettitleOfTheFormText();
+        String expected = "Для кого самокат";
+        Assert.assertEquals("Окно не открылось", expected, titleOfTheForm);
+    }
+
+        // Тестовые данные
+    @Parameterized.Parameters
+    public static Object[][] getCredentials() {
+        return new Object[][] {
+                { "Сутки — 400 рублей. Оплата курьеру — наличными или картой.", "accordion__heading-0", "accordion__panel-0" },
+                { "Пока что у нас так: один заказ — один самокат. Если хотите покататься с друзьями, можете просто сделать несколько заказов — один за другим.", "accordion__heading-1", "accordion__panel-1"},
+                { "Допустим, вы оформляете заказ на 8 мая. Мы привозим самокат 8 мая в течение дня. Отсчёт времени аренды начинается с момента," +
+                        " когда вы оплатите заказ курьеру. Если мы привезли самокат 8 мая в 20:30, суточная аренда закончится 9 мая в 20:30.", "accordion__heading-2", "accordion__panel-2" },
+                { "Только начиная с завтрашнего дня. Но скоро станем расторопнее.", "accordion__heading-3", "accordion__panel-3" },
+                { "Пока что нет! Но если что-то срочное — всегда можно позвонить в поддержку по красивому номеру 1010.", "accordion__heading-4", "accordion__panel-4" },
+                { "Самокат приезжает к вам с полной зарядкой. Этого хватает на восемь суток — даже если будете кататься без передышек и во сне. Зарядка не понадобится.", "accordion__heading-5", "accordion__panel-5" },
+                { "Да, пока самокат не привезли. Штрафа не будет, объяснительной записки тоже не попросим. Все же свои.", "accordion__heading-6", "accordion__panel-6" },
+                { "Да, обязательно. Всем самокатов! И Москве, и Московской области.", "accordion__heading-7", "accordion__panel-7" },
+        };
+    }
+
+    public PraktikumTest(String text, String FAQItem, String FAQAnswerText) {
+        this.text = text;
+    this.FAQItem = FAQItem;
+    this.FAQAnswerText =FAQAnswerText;
     }
 
     @Test
     //Проверка Выпадающего список в разделе «Вопросы о важном». в самом в методе вставлена 8 методов которые проверяют каждую кнопку
-    public void checkTextInDropdown(){
+    public void checkTextInDropdownTest(){
         driver = new ChromeDriver();
         driver.get(url);
         SamokatHomePageTest objSamokatHomePageTest = new SamokatHomePageTest(driver);
-        driver.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
-        objSamokatHomePageTest.compareFirstPanel();
-        objSamokatHomePageTest.compareSecondPanel();
-        objSamokatHomePageTest.compareThirdPanel();
-        objSamokatHomePageTest.compareFourthPanel();
-        objSamokatHomePageTest.compareFifthPanel();
-        objSamokatHomePageTest.compareSixthPanel();
-        objSamokatHomePageTest.compareSeventhPanel();
-        objSamokatHomePageTest.compareEighthPanel();
+        String resultText =objSamokatHomePageTest.comparePanels(FAQItem, FAQAnswerText);
+        Assert.assertEquals("Текст 1 не сходится", text, resultText);
+        System.out.println(resultText);
+
 
     }
 
